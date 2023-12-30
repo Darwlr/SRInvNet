@@ -1,3 +1,5 @@
+# SRInvNet: Simultaneous resolution enhancement and denoising of seismic data based on invertible neural network
+
 # Training
 First set a config file in options/train/, then run as following:
 
