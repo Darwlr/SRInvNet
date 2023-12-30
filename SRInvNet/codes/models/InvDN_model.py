@@ -19,23 +19,10 @@ import cv2
 logger = logging.getLogger('base')
 
 def gasuss_noise(data, mu=0.0, sigma=0.1):
-    """
-     添加高斯噪声
-    :param image: 输入的图像
-    :param mu: 均值
-    :param sigma: 标准差
-    :return: 含有高斯噪声的图像
-    """
     image = data.cpu().detach().numpy()
     # image = np.array(image / 255, dtype=float)
     noise = np.random.normal(mu, sigma, image.shape)
     gauss_noisy = image + noise
-    # if gauss_noisy.min() < 0:
-    #     low_clip = -1.
-    # else:
-    #     low_clip = 0.
-    # gauss_noisy = np.clip(gauss_noisy, low_clip, 1.0)
-    # gauss_noisy = np.uint8(gauss_noisy * 255)
     gauss_noisy = torch.FloatTensor(gauss_noisy)
     return gauss_noisy
 
@@ -68,10 +55,10 @@ class InvDN_Model(BaseModel):
             # loss
             self.Reconstruction_forw = ReconstructionLoss(losstype=self.train_opt['pixel_criterion_forw'])  # L2
             self.Reconstruction_back = ReconstructionLoss(losstype=self.train_opt['pixel_criterion_back'])  # L1
-            self.Rec_Forw_grad = Gradient_Loss()
-            self.Rec_back_grad = Gradient_Loss()
-            self.Rec_forw_SSIM = SSIM_Loss()
-            self.Rec_back_SSIM = SSIM_Loss()
+            # self.Rec_Forw_grad = Gradient_Loss()
+            # self.Rec_back_grad = Gradient_Loss()
+            # self.Rec_forw_SSIM = SSIM_Loss()
+            # self.Rec_back_SSIM = SSIM_Loss()
 
             # optimizers
             wd_G = train_opt['weight_decay_G'] if train_opt['weight_decay_G'] else 0
@@ -119,18 +106,18 @@ class InvDN_Model(BaseModel):
 
     def loss_forward(self, out, y):
         l_forw_fit = self.train_opt['lambda_fit_forw'] * self.Reconstruction_forw(out, y)
-        l_forw_grad = 0.1* self.train_opt['lambda_fit_forw'] * self.Rec_Forw_grad(out, y)
-        l_forw_SSIM = self.train_opt['lambda_fit_forw'] * self.Rec_forw_SSIM(out, y).mean()
+        # l_forw_grad = 0.1* self.train_opt['lambda_fit_forw'] * self.Rec_Forw_grad(out, y)
+        # l_forw_SSIM = self.train_opt['lambda_fit_forw'] * self.Rec_forw_SSIM(out, y).mean()
 
-        return l_forw_fit + l_forw_grad + l_forw_SSIM
+        return l_forw_fit 
 
     def loss_backward(self, x, y):
         x_samples = self.netG(x=y, rev=True)
         x_samples_image = x_samples[:, :1, :, :]
         l_back_rec = self.train_opt['lambda_rec_back'] * self.Reconstruction_back(x, x_samples_image)
-        l_grad_back_rec = 0.1*self.train_opt['lambda_rec_back'] * self.Rec_back_grad(x, x_samples_image)
-        l_back_SSIM = self.train_opt['lambda_rec_back'] * self.Rec_back_SSIM(x, x_samples_image).mean()
-        return l_back_rec + l_grad_back_rec + l_back_SSIM
+        # l_grad_back_rec = 0.1*self.train_opt['lambda_rec_back'] * self.Rec_back_grad(x, x_samples_image)
+        # l_back_SSIM = self.train_opt['lambda_rec_back'] * self.Rec_back_SSIM(x, x_samples_image).mean()
+        return l_back_rec
 
 
     def optimize_parameters(self, step):
