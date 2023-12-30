@@ -1,0 +1,90 @@
+
+#### general settings
+
+name: InvNet_ResUnit_x2
+use_tb_logger: true
+model: InvDN
+scale: 2
+gpu_ids: [0, 1, 2]
+
+
+#### datasets
+
+datasets:
+  data_range: '1-2400/2401-3200'
+  test_every: 1000
+  dir_data_root: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\'
+  dir_hr_clean: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\sx\\'
+  dir_lr_noisy: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\nx2\\'
+  dir_hr_noisy: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\nx2_hr\\'
+  dir_lr_clean: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\sx_lr\\'
+  batch_size: 8
+  n_workers: 0
+  train:
+    name: SIDD
+    mode: LQGTRN
+    dataroot_GT: 'D:\\Wang-Linrong\\InvDN-our\\data_extra\\sx\\' # path to training Clean images
+    dataroot_Noisy: 'Z:\\深度学习\\分辨率\\代码\\SR-DoubleD\\src\\data\\nx2\\' # path to training Noisy images
+    dataroot_LQ: ~ # path to training reference LR images, not necessary, if not provided, LR images will be generated in dataloader
+
+    use_shuffle: true
+    n_workers: 0  # per GPU
+    batch_size: 8
+    GT_size: 256
+    use_flip: true
+    use_rot: true
+    color: gray
+
+
+#### network structures
+
+network_G:
+  which_model_G:
+      subnet_type: Resnet
+  in_nc: 1
+  out_nc: 1
+  block_num: [7, 7]
+  scale: 2
+  init: xavier
+
+
+#### path
+
+path:
+  pretrain_model_G: ~
+  strict_load: true
+  resume_state: ~
+
+
+#### training settings: learning rate scheme, loss
+#
+train:
+  lr_G: !!float 2e-4
+  beta1: 0.9
+  beta2: 0.999
+  niter: 600000
+  warmup_iter: -1  # no warm up
+
+  lr_scheme: MultiStepLR
+  lr_steps: [100000, 200000, 300000, 400000, 500000]
+  lr_gamma: 0.5
+
+  pixel_criterion_forw: l2
+  pixel_criterion_back: l1
+
+  manual_seed: 10
+
+  val_freq: !!float 5e3
+
+  lambda_fit_forw: 16.
+  lambda_rec_back: 1
+  lambda_ce_forw: 1
+  weight_decay_G: !!float 1e-8
+  gradient_clipping: 10
+
+
+#### logger
+
+logger:
+  print_freq: 100
+  save_checkpoint_freq: !!float 5e3
